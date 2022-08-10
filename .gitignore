@@ -1,0 +1,6 @@
+.*
+!.gitignore
+!Makefile
+!ecs.cc
+!utils/.*
+!compile_commands.js
