@@ -1,0 +1,77 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-g",
+      "-std=c++17",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-Iutils",
+      "-c",
+      "-o",
+      "ecs.o",
+      "ecs.cc"
+    ],
+    "directory": "/home/dlb/Code/ecs",
+    "file": "/home/dlb/Code/ecs/ecs.cc",
+    "output": "/home/dlb/Code/ecs/ecs.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-c",
+      "-g",
+      "-std=c++17",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-Iutils",
+      "ecs.o",
+      "-o",
+      "ecs",
+      "utils/metaprog.hpp"
+    ],
+    "directory": "/home/dlb/Code/ecs",
+    "file": "/home/dlb/Code/ecs/utils/metaprog.hpp",
+    "output": "/home/dlb/Code/ecs/ecs"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-c",
+      "-g",
+      "-std=c++17",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-Iutils",
+      "ecs.o",
+      "-o",
+      "ecs",
+      "utils/result.hpp"
+    ],
+    "directory": "/home/dlb/Code/ecs",
+    "file": "/home/dlb/Code/ecs/utils/result.hpp",
+    "output": "/home/dlb/Code/ecs/ecs"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-c",
+      "-g",
+      "-std=c++17",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-Iutils",
+      "ecs.o",
+      "-o",
+      "ecs",
+      "utils/types.hpp"
+    ],
+    "directory": "/home/dlb/Code/ecs",
+    "file": "/home/dlb/Code/ecs/utils/types.hpp",
+    "output": "/home/dlb/Code/ecs/ecs"
+  }
+]
