@@ -4,6 +4,8 @@
 #include <tuple>
 #include <numeric>
 #include <cassert>
+#include <chrono>
+#include <thread>
 
 #include "utils/result.hpp"
 #include "utils/types.hpp"
@@ -110,10 +112,10 @@ namespace ecs {
 		handle_type spawn_entity() {
 			auto h = this->es.spawn();
 
-			// create space in the ComponentStore for a new entity if needed.
-			if (h >= cs.comps.capacity())
-				cs.comps.reserve(h);
-			
+			if (this->cs.comps.size() == h) {
+				this->cs.comps.push_back({});
+			}
+
 			return h;
 		}
 
@@ -143,6 +145,24 @@ namespace ecs {
 			}
 
 			return query_result;
+		}
+
+		// TODO: implement me
+		void update() {
+			for (const auto& f : this->update_hooks) {
+				f();
+			}
+		}
+
+	public:
+		void set_update_hooks(std::vector<std::function<void(void)>>&& hooks) {
+			this->update_hooks = std::move(hooks);
+		}
+
+		// Get a reference to the Nth component of an entity
+		template<typename C>
+		C& component(handle_type h) {
+			return std::get<C>(this->cs.comps[h]);
 		}
 
 	// Private ECS related methods: helpers / internal definitions.
@@ -199,6 +219,7 @@ namespace ecs {
 		ComponentStore<Cs...> cs;
 		
 	private:
+		std::vector<std::function<void(void)>> update_hooks;
 	};
 };
 
@@ -212,35 +233,77 @@ void prettyprint_vector(const std::vector<T>& v) {
 	std::cout << "]";
 }
 
+struct PositionComponent {
+	i64 x;
+	i64 y;
+};
+
+struct VelocityComponent {
+	i64 x;
+	i64 y;
+};
+
+struct SpriteComponent {
+	i64 handle;
+};
+	
+void draw(const SpriteComponent& spr, const PositionComponent& pos) {
+	std::cout << "drawing " << spr.handle << "at " << pos.x << ", " << pos.y << std::endl;
+}
+
 int main() {
 
-	struct PositionComponent {
-		PODPair<i64> pos;
-	};
-
-	struct VelocityComponent {
-		PODPair<i64> vel;
-	};
-
-	struct SpriteComponent {
-		i64 sprite_handle;
-	};
-	
 	ecs::System<PositionComponent, VelocityComponent, SpriteComponent> mysys;
 
-	std::vector<u64> with_components;
-
-	for (size_t i = 0; i < 100; i++) {
-		mysys.spawn_entity();
+	for (u64 i = 0; i < 10; i++) {
+		auto e = mysys.spawn_entity();
 		if (std::rand() % 2 == 0) {
-			with_components.push_back(i);
-			mysys.enable_components<PositionComponent, VelocityComponent, SpriteComponent>(i);
+			mysys.enable_components<PositionComponent, VelocityComponent, SpriteComponent>(e);
+			auto& pos = mysys.component<PositionComponent>(i);
+			pos.x = std::rand() % 640;
+			pos.y = std::rand() % 480;
+			auto& vel = mysys.component<VelocityComponent>(i);
+			vel.x = 3;
+			vel.y = 3;
 		}
 	}
 
-	auto qr = mysys.query<PositionComponent, VelocityComponent, SpriteComponent>();
+	mysys.set_update_hooks({
+			[&mysys]() { // movement
+				auto qr {mysys.query<PositionComponent, VelocityComponent>()};
+				for (const auto& e : qr) {
+					auto& pos {mysys.component<PositionComponent>(e)};
+					auto& vel {mysys.component<VelocityComponent>(e)};
+					pos.x += vel.x;
+					pos.y += vel.y;
+				}
+			},
+			[&mysys]() {
+				auto qr {mysys.query<PositionComponent, SpriteComponent>()};
+				for (const auto& e : qr) {
+					auto& spr {mysys.component<SpriteComponent>(e)};
+					auto& pos {mysys.component<PositionComponent>(e)};
+					draw(spr, pos);
+				}
+			}
+			});
 
-	assert(qr == with_components);
+	auto qr = mysys.query<PositionComponent, VelocityComponent>();
+	while (true) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+		/* auto pos = mysys.get_component<PositionComponent>(0); */
+		/* 	std::cout << "Position of entity 0: "; */
+		/* 	std::cout << "[" << pos.x << ", " << pos.y << "]\n"; */
+
+		for (const auto& i : qr) {
+			auto& pos = mysys.component<PositionComponent>(i);
+			std::cout << "Position of entity: " << i << ": ";
+			std::cout << "[" << pos.x << ", " << pos.y << "]\n";
+		}
+
+		mysys.update();
+	}
 
 	return 0;
 }
