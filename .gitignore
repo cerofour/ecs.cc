@@ -33,6 +33,8 @@
 
 .cache/
 
+.vscode/
+
 ecs
 test
 test.cc
